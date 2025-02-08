@@ -1,5 +1,5 @@
 import React, {useCallback, useState, useEffect, useRef} from 'react';
-import {View} from 'react-native';
+import {SafeAreaView, View} from 'react-native';
 import Video, {
   OnLoadData,
   OnLoadStartData,
@@ -21,6 +21,7 @@ import {PlatformSupport} from './OSSupport';
 import {_onBack} from './utils';
 import {_styles} from './styles';
 import type {VideoPlayerProps, WithRequiredProperty} from './types';
+import {ResolutionModal} from 'react-native-media-console/src/components/VideoResolution';
 
 const volumeWidth = 150;
 const iconOffset = 0;
@@ -71,6 +72,7 @@ const AnimatedVideoPlayer = (
     disableSeekbar = false,
     disablePlayPause = false,
     disableSeekButtons = false,
+    selectResolutionCallback,
     disableOverlay,
     navigator,
     rewindTime = 15,
@@ -84,8 +86,7 @@ const AnimatedVideoPlayer = (
     setTimeout(() => {}),
   ).current;
   const tapActionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [_resizeMode, setResizeMode] =
-    useState<VideoPlayerProps['resizeMode']>(resizeMode);
+  const [_resizeMode, setResizeMode] = useState<ResizeMode>(resizeMode);
   const [_paused, setPaused] = useState<boolean>(paused);
   const [_muted, setMuted] = useState<boolean>(muted);
   const [_volume, setVolume] = useState<number>(volume);
@@ -108,6 +109,7 @@ const AnimatedVideoPlayer = (
   const [currentTime, setCurrentTime] = useState(0);
   const [error, setError] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [isResolutionModalOpen, setResolutionModalOpen] = useState(false);
 
   const videoRef = props.videoRef || _videoRef;
 
@@ -352,6 +354,7 @@ const AnimatedVideoPlayer = (
       typeof events.onShowControls === 'function' && events.onShowControls();
     } else {
       animations.hideControlAnimation();
+      setResolutionModalOpen(false);
       clearControlTimeout();
       typeof events.onHideControls === 'function' && events.onHideControls();
     }
@@ -395,6 +398,10 @@ const AnimatedVideoPlayer = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleResolutionModalOpen = () => {
+    setResolutionModalOpen(!isResolutionModalOpen);
+  };
+
   return (
     <PlatformSupport
       showControls={showControls}
@@ -433,21 +440,28 @@ const AnimatedVideoPlayer = (
               resetControlTimeout={resetControlTimeout}
               showControls={showControls}
             />
-            <PlayPause
-              animations={animations}
-              disablePlayPause={disablePlayPause}
-              disableSeekButtons={disableSeekButtons}
-              paused={_paused}
-              togglePlayPause={togglePlayPause}
-              resetControlTimeout={resetControlTimeout}
-              showControls={showControls}
-              onPressRewind={() =>
-                videoRef?.current?.seek(currentTime - rewindTime)
-              }
-              onPressForward={() =>
-                videoRef?.current?.seek(currentTime + rewindTime)
-              }
-            />
+            {isResolutionModalOpen && showControls ? (
+              <ResolutionModal
+                selectResolutionCallback={selectResolutionCallback}
+              />
+            ) : (
+              <PlayPause
+                animations={animations}
+                disablePlayPause={disablePlayPause}
+                disableSeekButtons={disableSeekButtons}
+                paused={_paused}
+                togglePlayPause={togglePlayPause}
+                resetControlTimeout={resetControlTimeout}
+                showControls={showControls}
+                onPressRewind={() =>
+                  videoRef?.current?.seek(currentTime - rewindTime)
+                }
+                onPressForward={() =>
+                  videoRef?.current?.seek(currentTime + rewindTime)
+                }
+              />
+            )}
+
             <BottomControls
               animations={animations}
               panHandlers={seekPanResponder.panHandlers}
@@ -466,10 +480,11 @@ const AnimatedVideoPlayer = (
               seekerFillWidth={seekerFillWidth}
               seekerPosition={seekerPosition}
               setSeekerWidth={setSeekerWidth}
-              isFullscreen={_isFullscreen}
+              isFullscreen={isFullscreen}
               disableFullscreen={disableFullscreen}
               toggleFullscreen={toggleFullscreen}
               showControls={showControls}
+              handleResolutionModalOpen={handleResolutionModalOpen}
             />
           </>
         )}
