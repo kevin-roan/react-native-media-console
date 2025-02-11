@@ -11,10 +11,8 @@ export const styles = StyleSheet.create({
   },
   modalContainer: {
     position: 'absolute',
-    top: 0,
     right: 0,
     bottom: 0,
-    left: 0,
     flexDirection: 'row',
     alignItems: 'center',
     zIndex: 10000,
@@ -22,14 +20,23 @@ export const styles = StyleSheet.create({
   },
   modal: {
     borderWidth: 1,
+    borderRadius: 10,
     borderColor: '#999999',
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    height: '50%',
-    width: '50%',
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    padding: 10,
+    marginRight: 60,
+    marginBottom: 30,
+  },
+  modalHeading: {
+    fontSize: 18,
+    color: 'white',
+    paddingHorizontal: 4,
+    fontWeight: '200',
+    paddingBottom: 3,
   },
 
   modalSwitch: {
-    padding: 17,
+    padding: 3,
   },
   seperator: {
     borderBottomWidth: 0.4,
@@ -38,8 +45,8 @@ export const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   modalText: {
-    fontSize: 20,
-    color: '#fff',
+    fontSize: 16,
+    color: '#9999',
     textAlign: 'center',
   },
   selectedQuality: {

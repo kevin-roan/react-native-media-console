@@ -271,7 +271,7 @@ export interface VideoPlayerProps extends ReactVideoProps {
 
   /** 
   * seletedCallback
-  a callback function that gets called when the user clicks on the resolution modal,
+  a callback function that fires  when the user clicks on the resolution modal,
   params: resolution (that can be , auto,high,medium,low)
   */
   selectResolutionCallback?: (resolution: string) => void;

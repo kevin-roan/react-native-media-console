@@ -1,5 +1,11 @@
-import React, {useCallback, useState, useEffect, useRef} from 'react';
-import {SafeAreaView, View} from 'react-native';
+import React, {
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+  createRef,
+} from 'react';
+import {View} from 'react-native';
 import Video, {
   OnLoadData,
   OnLoadStartData,
@@ -8,6 +14,8 @@ import Video, {
   ResizeMode,
   VideoRef,
 } from 'react-native-video';
+import {ReactNativeZoomableView} from '@openspacelabs/react-native-zoomable-view';
+
 import {useControlTimeout, useJSAnimations, usePanResponders} from './hooks';
 import {
   Error,
@@ -402,6 +410,8 @@ const AnimatedVideoPlayer = (
     setResolutionModalOpen(!isResolutionModalOpen);
   };
 
+  const zoomableViewRef = createRef<ReactNativeZoomableView>();
+
   return (
     <PlatformSupport
       showControls={showControls}
@@ -410,82 +420,115 @@ const AnimatedVideoPlayer = (
       testID={testID}
     >
       <View style={[_styles.player.container, styles.containerStyle]}>
-        <Video
-          {...props}
-          {...events}
-          ref={videoRef || _videoRef}
-          resizeMode={_resizeMode}
-          volume={_volume}
-          paused={_paused}
-          muted={_muted}
-          rate={rate}
-          style={[_styles.player.video, styles.videoStyle]}
-          source={source}
-        />
+        <ReactNativeZoomableView
+          ref={zoomableViewRef}
+          maxZoom={10}
+          minZoom={1}
+          zoomStep={0.5}
+          initialZoom={1}
+          zoomEnabled={!showControls}
+          doubleTapZoomToCenter={false}
+          disablePanOnInitialZoom={!showControls}
+          onSingleTap={() => {
+            zoomableViewRef.current!.moveBy(0, 0);
+            setShowControls(!showControls);
+          }}
+          bindToBorders={true}
+          panBoundaryPadding={0}
+          movementSensibility={3}
+        >
+          <Video
+            {...props}
+            {...events}
+            ref={videoRef || _videoRef}
+            resizeMode={_resizeMode}
+            volume={_volume}
+            paused={_paused}
+            muted={_muted}
+            rate={rate}
+            style={[_styles.player.video, styles.videoStyle]}
+            source={source}
+          />
+        </ReactNativeZoomableView>
+
         {loading ? (
           <Loader />
         ) : (
           <>
-            <Error error={error} />
-            {!disableOverlay && <Overlay animations={animations} />}
-            <TopControls
-              panHandlers={volumePanResponder.panHandlers}
-              animations={animations}
-              disableBack={disableBack}
-              disableVolume={disableVolume}
-              volumeFillWidth={volumeFillWidth}
-              volumeTrackWidth={volumeTrackWidth}
-              volumePosition={volumePosition}
-              onBack={events.onBack}
-              resetControlTimeout={resetControlTimeout}
-              showControls={showControls}
-            />
-            {isResolutionModalOpen && showControls ? (
-              <ResolutionModal
-                selectResolutionCallback={selectResolutionCallback}
-              />
-            ) : (
-              <PlayPause
-                animations={animations}
-                disablePlayPause={disablePlayPause}
-                disableSeekButtons={disableSeekButtons}
-                paused={_paused}
-                togglePlayPause={togglePlayPause}
-                resetControlTimeout={resetControlTimeout}
-                showControls={showControls}
-                onPressRewind={() =>
-                  videoRef?.current?.seek(currentTime - rewindTime)
-                }
-                onPressForward={() =>
-                  videoRef?.current?.seek(currentTime + rewindTime)
-                }
-              />
-            )}
+            {showControls ? (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  flex: 1,
+                }}
+              >
+                <Error error={error} />
+                {!disableOverlay && <Overlay animations={animations} />}
+                <TopControls
+                  panHandlers={volumePanResponder.panHandlers}
+                  animations={animations}
+                  disableBack={disableBack}
+                  disableVolume={disableVolume}
+                  volumeFillWidth={volumeFillWidth}
+                  volumeTrackWidth={volumeTrackWidth}
+                  volumePosition={volumePosition}
+                  onBack={events.onBack}
+                  resetControlTimeout={resetControlTimeout}
+                  showControls={showControls}
+                />
+                {isResolutionModalOpen && showControls ? (
+                  <ResolutionModal
+                    selectResolutionCallback={selectResolutionCallback}
+                  />
+                ) : (
+                  <PlayPause
+                    animations={animations}
+                    disablePlayPause={disablePlayPause}
+                    disableSeekButtons={disableSeekButtons}
+                    paused={_paused}
+                    togglePlayPause={togglePlayPause}
+                    resetControlTimeout={resetControlTimeout}
+                    showControls={showControls}
+                    onPressRewind={() =>
+                      videoRef?.current?.seek(currentTime - rewindTime)
+                    }
+                    onPressForward={() =>
+                      videoRef?.current?.seek(currentTime + rewindTime)
+                    }
+                  />
+                )}
 
-            <BottomControls
-              animations={animations}
-              panHandlers={seekPanResponder.panHandlers}
-              disableTimer={disableTimer}
-              disableSeekbar={disableSeekbar}
-              showHours={showHours}
-              showDuration={showDuration}
-              paused={_paused}
-              showTimeRemaining={_showTimeRemaining}
-              currentTime={currentTime}
-              duration={duration}
-              seekColor={seekColor}
-              title={title}
-              toggleTimer={toggleTimer}
-              resetControlTimeout={resetControlTimeout}
-              seekerFillWidth={seekerFillWidth}
-              seekerPosition={seekerPosition}
-              setSeekerWidth={setSeekerWidth}
-              isFullscreen={isFullscreen}
-              disableFullscreen={disableFullscreen}
-              toggleFullscreen={toggleFullscreen}
-              showControls={showControls}
-              handleResolutionModalOpen={handleResolutionModalOpen}
-            />
+                <BottomControls
+                  isResolutionModalOpen={isResolutionModalOpen}
+                  animations={animations}
+                  panHandlers={seekPanResponder.panHandlers}
+                  disableTimer={disableTimer}
+                  disableSeekbar={disableSeekbar}
+                  showHours={showHours}
+                  showDuration={showDuration}
+                  paused={_paused}
+                  showTimeRemaining={_showTimeRemaining}
+                  currentTime={currentTime}
+                  duration={duration}
+                  seekColor={seekColor}
+                  title={title}
+                  toggleTimer={toggleTimer}
+                  resetControlTimeout={resetControlTimeout}
+                  seekerFillWidth={seekerFillWidth}
+                  seekerPosition={seekerPosition}
+                  setSeekerWidth={setSeekerWidth}
+                  isFullscreen={isFullscreen}
+                  disableFullscreen={disableFullscreen}
+                  toggleFullscreen={toggleFullscreen}
+                  showControls={showControls}
+                  handleResolutionModalOpen={handleResolutionModalOpen}
+                />
+              </View>
+            ) : null}
           </>
         )}
       </View>
